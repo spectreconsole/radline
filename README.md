@@ -3,6 +3,8 @@
 This is a preview of the RadLine library.  
 At this point, we will not be accepting pull requests for new functionality.
 
+_[![RadLine NuGet Version](https://img.shields.io/nuget/v/radline.svg?style=flat&label=NuGet%3ARadLine)](https://www.nuget.org/packages/RadLine)_
+
 # Usage
 
 See the `RadLine.Sandbox` project for usage examples.
