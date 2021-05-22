@@ -1,26 +1,26 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using Spectre.Console;
 
-namespace RadLine.Sandbox
+namespace RadLine.Examples
 {
     public static class Program
     {
         public static async Task Main()
         {
-            if (!Debugger.IsAttached)
+            if (!LineEditor.IsSupported(AnsiConsole.Console))
             {
-                Debugger.Launch();
+                AnsiConsole.MarkupLine("The terminal does not support ANSI codes, or it isn't a terminal.");
             }
 
+            // Create editor
             var editor = new LineEditor()
             {
                 MultiLine = true,
-                Text = "HELLO ABC WORLD DEF GHIJKLMN 🥰 PATRIK WAS HERE",
-                Prompt = new LineNumberPrompt(),
+                Text = "Hello, and welcome to RadLine!\nPress SHIFT+ENTER to insert a new line\nPress ENTER to submit",
+                Prompt = new LineNumberPrompt(new Style(foreground: Color.Yellow)),
                 Completion = new TestCompletion(),
                 Highlighter = new WordHighlighter()
                     .AddWord("git", new Style(foreground: Color.Yellow))
@@ -31,31 +31,29 @@ namespace RadLine.Sandbox
                     .AddWord("commit", new Style(foreground: Color.Blue))
                     .AddWord("rebase", new Style(foreground: Color.Red))
                     .AddWord("Hello", new Style(foreground: Color.Blue))
-                    .AddWord("Goodbye", new Style(foreground: Color.Green))
-                    .AddWord("World", new Style(foreground: Color.Yellow))
-                    .AddWord("Syntax", new Style(decoration: Decoration.Strikethrough))
-                    .AddWord("Highlighting", new Style(decoration: Decoration.SlowBlink)),
+                    .AddWord("SHIFT", new Style(foreground: Color.Grey))
+                    .AddWord("ENTER", new Style(foreground: Color.Grey))
+                    .AddWord("RadLine", new Style(foreground: Color.Yellow, decoration: Decoration.SlowBlink)),
             };
 
             // Add custom commands
-            editor.KeyBindings.Add<PrependSmiley>(ConsoleKey.I, ConsoleModifiers.Control);
+            editor.KeyBindings.Add<InsertSmiley>(ConsoleKey.I, ConsoleModifiers.Control);
 
-            // Read a line
+            // Read a line (or many)
             var result = await editor.ReadLine(CancellationToken.None);
 
             // Write the buffer
             AnsiConsole.WriteLine();
             AnsiConsole.Render(new Panel(result.EscapeMarkup())
-                .Header("[yellow]Commit details:[/]")
+                .Header("[yellow]Text:[/]")
                 .RoundedBorder());
         }
     }
 
-    public sealed class PrependSmiley : LineEditorCommand
+    public sealed class InsertSmiley : LineEditorCommand
     {
         public override void Execute(LineEditorContext context)
         {
-            context.Execute(new PreviousWordCommand());
             context.Buffer.Insert(":-)");
         }
     }
@@ -71,7 +69,7 @@ namespace RadLine.Sandbox
 
             if (context.Equals("git ", StringComparison.Ordinal))
             {
-                return new[] { "init", "initialize", "push", "commit", "rebase" };
+                return new[] { "init", "branch", "push", "commit", "rebase" };
             }
 
             return null;

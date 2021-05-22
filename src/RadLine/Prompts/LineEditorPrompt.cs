@@ -29,7 +29,7 @@ namespace RadLine
             }
         }
 
-        public (Markup Markup, int Margin) GetPrompt(int line)
+        public (Markup Markup, int Margin) GetPrompt(ILineEditorState state, int line)
         {
             if (line == 0)
             {

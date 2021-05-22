@@ -11,9 +11,9 @@ namespace RadLine
             _style = style ?? new Style(foreground: Color.Yellow, background: Color.Blue);
         }
 
-        public (Markup Markup, int Margin) GetPrompt(int line)
+        public (Markup Markup, int Margin) GetPrompt(ILineEditorState state, int line)
         {
-            return (new Markup(line.ToString("D2"), _style), 1);
+            return (new Markup((line + 1).ToString("D2"), _style), 1);
         }
     }
 }

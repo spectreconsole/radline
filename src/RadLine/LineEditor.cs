@@ -10,10 +10,9 @@ namespace RadLine
         private readonly IInputSource _source;
         private readonly IServiceProvider? _provider;
         private readonly IAnsiConsole _console;
-        private readonly LineBufferRenderer _presenter;
+        private readonly LineBufferRenderer _renderer;
 
         public KeyBindings KeyBindings { get; }
-
         public bool MultiLine { get; init; } = false;
         public string Text { get; init; } = string.Empty;
 
@@ -26,11 +25,12 @@ namespace RadLine
             _console = terminal ?? AnsiConsole.Console;
             _source = source ?? new DefaultInputSource(_console);
             _provider = provider;
-            _presenter = new LineBufferRenderer(_console, this);
+            _renderer = new LineBufferRenderer(_console, this);
 
             KeyBindings = new KeyBindings();
             KeyBindings.Add(ConsoleKey.Tab, () => new AutoCompleteCommand(AutoComplete.Next));
             KeyBindings.Add(ConsoleKey.Tab, ConsoleModifiers.Control, () => new AutoCompleteCommand(AutoComplete.Previous));
+
             KeyBindings.Add<BackspaceCommand>(ConsoleKey.Backspace);
             KeyBindings.Add<DeleteCommand>(ConsoleKey.Delete);
             KeyBindings.Add<MoveHomeCommand>(ConsoleKey.Home);
@@ -47,10 +47,25 @@ namespace RadLine
             KeyBindings.Add<NewLineCommand>(ConsoleKey.Enter, ConsoleModifiers.Shift);
         }
 
+        public static bool IsSupported(IAnsiConsole console)
+        {
+            if (console is null)
+            {
+                throw new ArgumentNullException(nameof(console));
+            }
+
+            return
+                console.Profile.Out.IsTerminal &&
+                console.Profile.Capabilities.Ansi &&
+                console.Profile.Capabilities.Interactive;
+        }
+
         public async Task<string?> ReadLine(CancellationToken cancellationToken)
         {
             var cancelled = false;
             var state = new LineEditorState(Prompt, Text);
+
+            _renderer.Refresh(state);
 
             while (true)
             {
@@ -87,7 +102,7 @@ namespace RadLine
                 }
             }
 
-            _presenter.RenderLine(state, cursorPosition: 0);
+            _renderer.RenderLine(state, cursorPosition: 0);
 
             // Move the cursor to the last line
             while (state.MoveDown())
@@ -110,8 +125,6 @@ namespace RadLine
             var provider = new DefaultServiceProvider(_provider);
             provider.RegisterOptional<ITextCompletion, ITextCompletion>(Completion);
             var context = new LineEditorContext(state.Buffer, provider);
-
-            _presenter.RenderLine(state);
 
             while (true)
             {
@@ -148,7 +161,7 @@ namespace RadLine
                 }
 
                 // Render the line
-                _presenter.RenderLine(state);
+                _renderer.RenderLine(state);
             }
         }
 
@@ -156,20 +169,33 @@ namespace RadLine
         {
             using (_console.HideCursor())
             {
-                _presenter.RenderLine(state, cursorPosition: 0);
                 state.AddLine();
 
-                // Moving the cursor won't work here if we're at
-                // the bottom of the screen, so let's insert a new line.
-                _console.WriteLine();
+                if (state.LineCount > _console.Profile.Height)
+                {
+                    _console.Cursor.MoveDown();
+                }
+                else
+                {
+                    _console.WriteLine();
+                }
+
+                if (state.LineCount > _console.Profile.Height)
+                {
+                    _renderer.Refresh(state);
+                }
+                else
+                {
+                    _renderer.RenderLine(state, cursorPosition: 0);
+                }
             }
         }
 
         private void MoveUp(LineEditorState state)
         {
-            Move(state, state =>
+            Move(state, (state, moveCursor) =>
             {
-                if (state.MoveUp())
+                if (state.MoveUp() && moveCursor)
                 {
                     _console.Cursor.MoveUp();
                 }
@@ -178,9 +204,9 @@ namespace RadLine
 
         private void MoveDown(LineEditorState state)
         {
-            Move(state, state =>
+            Move(state, (state, moveCursor) =>
             {
-                if (state.MoveDown())
+                if (state.MoveDown() && moveCursor)
                 {
                     _console.Cursor.MoveDown();
                 }
@@ -189,34 +215,62 @@ namespace RadLine
 
         private void MoveFirst(LineEditorState state)
         {
-            Move(state, state =>
+            Move(state, (state, moveCursor) =>
             {
                 while (state.MoveUp())
                 {
-                    _console.Cursor.MoveUp();
+                    if (moveCursor)
+                    {
+                        _console.Cursor.MoveUp();
+                    }
                 }
             });
         }
 
         private void MoveLast(LineEditorState state)
         {
-            Move(state, state =>
+            Move(state, (state, moveCursor) =>
             {
                 while (state.MoveDown())
                 {
-                    _console.Cursor.MoveDown();
+                    if (moveCursor)
+                    {
+                        _console.Cursor.MoveDown();
+                    }
                 }
             });
         }
 
-        private void Move(LineEditorState state, Action<LineEditorState> action)
+        private void Move(LineEditorState state, Action<LineEditorState, bool> action)
         {
             using (_console.HideCursor())
             {
-                _presenter.RenderLine(state, cursorPosition: 0);
-                var position = state.Buffer.Position;
-                action(state);
-                state.Buffer.Move(position);
+                if (state.LineCount > _console.Profile.Height)
+                {
+                    // Get the current position
+                    var position = state.Buffer.Position;
+
+                    // Refresh everything
+                    action(state, true);
+                    _renderer.Refresh(state);
+
+                    // Re-render the current line at the correct position
+                    state.Buffer.Move(position);
+                    _renderer.RenderLine(state);
+                }
+                else
+                {
+                    // Get the current position
+                    var position = state.Buffer.Position;
+
+                    // Reset the line
+                    _renderer.RenderLine(state, cursorPosition: 0);
+                    action(state, true);
+
+                    // Render the current line at the correct position
+                    state.Buffer.Move(position);
+                    _renderer.RenderLine(state);
+                }
             }
         }
     }
