@@ -35,8 +35,6 @@ namespace RadLine.Examples
             editor.KeyBindings.Add<DeleteCommand>(ConsoleKey.Delete);
             editor.KeyBindings.Add<MoveHomeCommand>(ConsoleKey.Home);
             editor.KeyBindings.Add<MoveEndCommand>(ConsoleKey.End);
-            editor.KeyBindings.Add<MoveFirstLineCommand>(ConsoleKey.PageUp);
-            editor.KeyBindings.Add<MoveLastLineCommand>(ConsoleKey.PageDown);
             editor.KeyBindings.Add<MoveLeftCommand>(ConsoleKey.LeftArrow);
             editor.KeyBindings.Add<MoveRightCommand>(ConsoleKey.RightArrow);
             editor.KeyBindings.Add<PreviousWordCommand>(ConsoleKey.LeftArrow, ConsoleModifiers.Control);
