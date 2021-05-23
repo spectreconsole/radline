@@ -23,4 +23,3 @@ See the `RadLine.Sandbox` project for usage examples.
 * Any modifier with `ENTER` key does not register on macOS, due to a bug
   in the System.Console.ReadKey implementation. We will be moving away
   from using this before release.
-* Lines do not update properly when moving past vertical screen buffer boundaries.
