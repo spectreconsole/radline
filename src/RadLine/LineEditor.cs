@@ -65,7 +65,7 @@ namespace RadLine
             var cancelled = false;
             var state = new LineEditorState(Prompt, Text);
 
-            _renderer.Refresh(state);
+            _renderer.Initialize(state);
 
             while (true)
             {

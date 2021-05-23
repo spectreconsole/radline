@@ -11,7 +11,6 @@ namespace RadLine
     {
         private readonly IAnsiConsole _console;
         private readonly IHighlighterAccessor _accessor;
-        private bool _initialized;
 
         public LineBufferRenderer(IAnsiConsole console, IHighlighterAccessor accessor)
         {
@@ -24,6 +23,38 @@ namespace RadLine
             _accessor = accessor;
         }
 
+        public void Initialize(LineEditorState state)
+        {
+            // Everything fit inside the terminal?
+            if (state.LineCount < _console.Profile.Height)
+            {
+                _console.Cursor.Hide();
+
+                var builder = new StringBuilder();
+                for (var i = 0; i < state.LineCount; i++)
+                {
+                    var (prompt, margin) = state.Prompt.GetPrompt(state, i);
+                    AppendLine(builder, state.GetBufferAt(i), prompt, margin, 0);
+
+                    if (i != state.LineCount - 1)
+                    {
+                        builder.Append(Environment.NewLine);
+                    }
+                }
+
+                _console.WriteAnsi(builder.ToString());
+                _console.Cursor.Show();
+
+                // Move to the last line
+                state.Move(state.LineCount);
+                RenderLine(state);
+            }
+            else
+            {
+                Refresh(state);
+            }
+        }
+
         public void Refresh(LineEditorState state)
         {
             if (!_console.Profile.Capabilities.Ansi)
@@ -32,16 +63,7 @@ namespace RadLine
             }
 
             var builder = new StringBuilder();
-
-            // First render?
-            if (!_initialized)
-            {
-                Initialize(state, builder);
-                return;
-            }
-
-            // Set cursor to home position
-            builder.Append("\u001b[1;1H");
+            builder.Append("\u001b[1;1H"); // Set cursor to home position
 
             var rowIndex = 0;
             var height = _console.Profile.Height;
@@ -95,35 +117,6 @@ namespace RadLine
 
             // Refresh the current line
             RenderLine(state);
-        }
-
-        private void Initialize(LineEditorState state, StringBuilder builder)
-        {
-            _initialized = true;
-
-            // Everything fit inside the terminal?
-            if (state.LineCount < _console.Profile.Height)
-            {
-                _console.Cursor.Hide();
-
-                for (var i = 0; i < state.LineCount; i++)
-                {
-                    var (prompt, margin) = state.Prompt.GetPrompt(state, i);
-                    AppendLine(builder, state.GetBufferAt(i), prompt, margin, 0);
-
-                    if (i != state.LineCount - 1)
-                    {
-                        builder.Append(Environment.NewLine);
-                    }
-                }
-
-                _console.WriteAnsi(builder.ToString());
-                _console.Cursor.Show();
-
-                // Move to the last line
-                state.Move(state.LineCount);
-                RenderLine(state);
-            }
         }
 
         public void RenderLine(LineEditorState state, int? cursorPosition = null)
