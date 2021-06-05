@@ -1,7 +1,10 @@
 using System;
+using System.Collections.Generic;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Spectre.Console;
+using Spectre.Console.Advanced;
 
 namespace RadLine
 {
@@ -10,7 +13,8 @@ namespace RadLine
         private readonly IInputSource _source;
         private readonly IServiceProvider? _provider;
         private readonly IAnsiConsole _console;
-        private readonly LineBufferRenderer _renderer;
+        private readonly LineEditorRenderer _renderer;
+        private readonly LineEditorHistory _history;
 
         public KeyBindings KeyBindings { get; }
         public bool MultiLine { get; init; } = false;
@@ -19,32 +23,18 @@ namespace RadLine
         public ILineEditorPrompt Prompt { get; init; } = new LineEditorPrompt("[yellow]>[/]");
         public ITextCompletion? Completion { get; init; }
         public IHighlighter? Highlighter { get; init; }
+        public ILineEditorHistory History => _history;
 
         public LineEditor(IAnsiConsole? terminal = null, IInputSource? source = null, IServiceProvider? provider = null)
         {
             _console = terminal ?? AnsiConsole.Console;
             _source = source ?? new DefaultInputSource(_console);
             _provider = provider;
-            _renderer = new LineBufferRenderer(_console, this);
+            _renderer = new LineEditorRenderer(_console, this);
+            _history = new LineEditorHistory();
 
             KeyBindings = new KeyBindings();
-            KeyBindings.Add(ConsoleKey.Tab, () => new AutoCompleteCommand(AutoComplete.Next));
-            KeyBindings.Add(ConsoleKey.Tab, ConsoleModifiers.Control, () => new AutoCompleteCommand(AutoComplete.Previous));
-
-            KeyBindings.Add<BackspaceCommand>(ConsoleKey.Backspace);
-            KeyBindings.Add<DeleteCommand>(ConsoleKey.Delete);
-            KeyBindings.Add<MoveHomeCommand>(ConsoleKey.Home);
-            KeyBindings.Add<MoveEndCommand>(ConsoleKey.End);
-            KeyBindings.Add<MoveUpCommand>(ConsoleKey.UpArrow);
-            KeyBindings.Add<MoveDownCommand>(ConsoleKey.DownArrow);
-            KeyBindings.Add<MoveFirstLineCommand>(ConsoleKey.PageUp);
-            KeyBindings.Add<MoveLastLineCommand>(ConsoleKey.PageDown);
-            KeyBindings.Add<MoveLeftCommand>(ConsoleKey.LeftArrow);
-            KeyBindings.Add<MoveRightCommand>(ConsoleKey.RightArrow);
-            KeyBindings.Add<PreviousWordCommand>(ConsoleKey.LeftArrow, ConsoleModifiers.Control);
-            KeyBindings.Add<NextWordCommand>(ConsoleKey.RightArrow, ConsoleModifiers.Control);
-            KeyBindings.Add<SubmitCommand>(ConsoleKey.Enter);
-            KeyBindings.Add<NewLineCommand>(ConsoleKey.Enter, ConsoleModifiers.Shift);
+            KeyBindings.AddDefault();
         }
 
         public static bool IsSupported(IAnsiConsole console)
@@ -65,7 +55,8 @@ namespace RadLine
             var cancelled = false;
             var state = new LineEditorState(Prompt, Text);
 
-            _renderer.Initialize(state);
+            _history.Reset();
+            _renderer.Refresh(state);
 
             while (true)
             {
@@ -80,9 +71,32 @@ namespace RadLine
                 {
                     break;
                 }
+                else if (result.Result == SubmitAction.PreviousHistory)
+                {
+                    if (_history.MovePrevious(state) && !SetContent(state, _history.Current))
+                    {
+                        continue;
+                    }
+                }
+                else if (result.Result == SubmitAction.NextHistory)
+                {
+                    if (_history.MoveNext() && !SetContent(state, _history.Current))
+                    {
+                        continue;
+                    }
+                }
                 else if (result.Result == SubmitAction.NewLine && MultiLine && state.IsLastLine)
                 {
-                    AddNewLine(state);
+                    // Add a new line
+                    state.AddLine();
+
+                    // Refresh
+                    var builder = new StringBuilder();
+                    builder.Append("\u001b[?25l"); // Hide cursor
+                    _renderer.AnsiBuilder.MoveDown(builder, state);
+                    _renderer.AnsiBuilder.BuildRefresh(builder, state);
+                    builder.Append("\u001b[?25h"); // Show cursor
+                    _console.WriteAnsi(builder.ToString());
                 }
                 else if (result.Result == SubmitAction.MoveUp && MultiLine)
                 {
@@ -114,8 +128,14 @@ namespace RadLine
             // the bottom of the screen, so let's insert a new line.
             _console.WriteLine();
 
+            // Add the current state to the history
+            if (!state.IsEmpty)
+            {
+                _history.Add(state.GetBuffers());
+            }
+
             // Return all the lines
-            return cancelled ? null : state.Text.TrimEnd('\r', '\n');
+            return cancelled ? null : state.Text;
         }
 
         private async Task<(LineBuffer Buffer, SubmitAction Result)> ReadLine(
@@ -165,37 +185,11 @@ namespace RadLine
             }
         }
 
-        private void AddNewLine(LineEditorState state)
-        {
-            using (_console.HideCursor())
-            {
-                state.AddLine();
-
-                if (state.LineCount > _console.Profile.Height)
-                {
-                    _console.Cursor.MoveDown();
-                }
-                else
-                {
-                    _console.WriteLine();
-                }
-
-                if (state.LineCount > _console.Profile.Height)
-                {
-                    _renderer.Refresh(state);
-                }
-                else
-                {
-                    _renderer.RenderLine(state, cursorPosition: 0);
-                }
-            }
-        }
-
         private void MoveUp(LineEditorState state)
         {
-            Move(state, (state, moveCursor) =>
+            Move(state, () =>
             {
-                if (state.MoveUp() && moveCursor)
+                if (state.MoveUp())
                 {
                     _console.Cursor.MoveUp();
                 }
@@ -204,9 +198,9 @@ namespace RadLine
 
         private void MoveDown(LineEditorState state)
         {
-            Move(state, (state, moveCursor) =>
+            Move(state, () =>
             {
-                if (state.MoveDown() && moveCursor)
+                if (state.MoveDown())
                 {
                     _console.Cursor.MoveDown();
                 }
@@ -215,33 +209,27 @@ namespace RadLine
 
         private void MoveFirst(LineEditorState state)
         {
-            Move(state, (state, moveCursor) =>
+            Move(state, () =>
             {
                 while (state.MoveUp())
                 {
-                    if (moveCursor)
-                    {
-                        _console.Cursor.MoveUp();
-                    }
+                    _console.Cursor.MoveUp();
                 }
             });
         }
 
         private void MoveLast(LineEditorState state)
         {
-            Move(state, (state, moveCursor) =>
+            Move(state, () =>
             {
                 while (state.MoveDown())
                 {
-                    if (moveCursor)
-                    {
-                        _console.Cursor.MoveDown();
-                    }
+                    _console.Cursor.MoveDown();
                 }
             });
         }
 
-        private void Move(LineEditorState state, Action<LineEditorState, bool> action)
+        private void Move(LineEditorState state, Action action)
         {
             using (_console.HideCursor())
             {
@@ -251,7 +239,7 @@ namespace RadLine
                     var position = state.Buffer.Position;
 
                     // Refresh everything
-                    action(state, true);
+                    action();
                     _renderer.Refresh(state);
 
                     // Re-render the current line at the correct position
@@ -265,13 +253,66 @@ namespace RadLine
 
                     // Reset the line
                     _renderer.RenderLine(state, cursorPosition: 0);
-                    action(state, true);
+                    action();
 
                     // Render the current line at the correct position
                     state.Buffer.Move(position);
                     _renderer.RenderLine(state);
                 }
             }
+        }
+
+        private bool SetContent(LineEditorState state, IList<LineBuffer>? lines)
+        {
+            // Nothing to set?
+            if (lines == null || lines.Count == 0)
+            {
+                return false;
+            }
+
+            var builder = new StringBuilder();
+
+            // Clearing the current lines will
+            // move the cursor to the top.
+            _renderer.AnsiBuilder.BuildClear(builder, state);
+
+            // Remove all lines
+            state.RemoveAllLines();
+
+            // Hide the cursor
+            builder.Append("\u001b[?25l");
+
+            // Add all the lines
+            foreach (var line in lines)
+            {
+                state.AddLine(line.Content);
+            }
+
+            // Make room for all the lines
+            var first = true;
+            foreach (var line in lines)
+            {
+                var shouldAddNewLine = true;
+                if (first)
+                {
+                    shouldAddNewLine = false;
+                    first = false;
+                }
+
+                if (shouldAddNewLine)
+                {
+                    _renderer.AnsiBuilder.MoveDown(builder, state);
+                }
+            }
+
+            _renderer.AnsiBuilder.BuildRefresh(builder, state);
+
+            // Show the cursor again
+            builder.Append("\u001b[?25h");
+
+            // Flush
+            _console.WriteAnsi(builder.ToString());
+            return true;
         }
     }
 }

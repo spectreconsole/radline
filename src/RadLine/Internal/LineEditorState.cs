@@ -17,6 +17,7 @@ namespace RadLine
         public bool IsLastLine => _lineIndex == _lines.Count - 1;
         public LineBuffer Buffer => _lines[_lineIndex];
 
+        public bool IsEmpty => string.IsNullOrWhiteSpace(Text.TrimEnd('\r', '\n'));
         public string Text => string.Join(Environment.NewLine, _lines.Select(x => x.Content));
 
         public LineEditorState(ILineEditorPrompt prompt, string text)
@@ -42,6 +43,30 @@ namespace RadLine
         public LineBuffer GetBufferAt(int line)
         {
             return _lines[line];
+        }
+
+        public IList<LineBuffer> GetBuffers()
+        {
+            return _lines;
+        }
+
+        public bool SetContent(IList<LineBuffer> buffers, int lineIndex)
+        {
+            if (buffers is null)
+            {
+                throw new ArgumentNullException(nameof(buffers));
+            }
+
+            if (buffers.Count == 0)
+            {
+                return false;
+            }
+
+            _lines.Clear();
+            _lines.AddRange(buffers);
+            _lineIndex = lineIndex;
+
+            return true;
         }
 
         public void Move(int line)
@@ -71,9 +96,15 @@ namespace RadLine
             return false;
         }
 
-        public void AddLine()
+        public void RemoveAllLines()
         {
-            _lines.Add(new LineBuffer());
+            _lines.Clear();
+            _lineIndex = -1;
+        }
+
+        public void AddLine(string? content = null)
+        {
+            _lines.Add(new LineBuffer(content));
             _lineIndex++;
         }
     }

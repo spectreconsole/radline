@@ -20,7 +20,7 @@ namespace RadLine.Examples
             {
                 MultiLine = true,
                 Text = "Hello, and welcome to RadLine!\nPress SHIFT+ENTER to insert a new line\nPress ENTER to submit",
-                Prompt = new LineNumberPrompt(new Style(foreground: Color.Yellow)),
+                Prompt = new LineNumberPrompt(new Style(foreground: Color.Yellow, background: Color.Black)),
                 Completion = new TestCompletion(),
                 Highlighter = new WordHighlighter()
                     .AddWord("git", new Style(foreground: Color.Yellow))
@@ -35,6 +35,12 @@ namespace RadLine.Examples
                     .AddWord("ENTER", new Style(foreground: Color.Grey))
                     .AddWord("RadLine", new Style(foreground: Color.Yellow, decoration: Decoration.SlowBlink)),
             };
+
+            // Add some history
+            editor.History.Add("foo\nbar\nbaz");
+            editor.History.Add("bar");
+            editor.History.Add("Spectre.Console");
+            editor.History.Add("Whaaat?");
 
             // Add custom commands
             editor.KeyBindings.Add<InsertSmiley>(ConsoleKey.I, ConsoleModifiers.Control);
