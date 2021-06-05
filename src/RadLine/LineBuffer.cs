@@ -81,6 +81,17 @@ namespace RadLine
             _position = _buffer.Length;
         }
 
+        public LineBuffer(LineBuffer buffer)
+        {
+            if (buffer is null)
+            {
+                throw new ArgumentNullException(nameof(buffer));
+            }
+
+            _buffer = buffer.Content;
+            _position = _buffer.Length;
+        }
+
         public bool Move(int position)
         {
             if (position == _position)

@@ -34,19 +34,6 @@ namespace RadLine.Examples
                 Highlighter = new JavaScriptHighlighter(),
             };
 
-            // Add custom commands
-            editor.KeyBindings.Clear();
-            editor.KeyBindings.Add<BackspaceCommand>(ConsoleKey.Backspace);
-            editor.KeyBindings.Add<DeleteCommand>(ConsoleKey.Delete);
-            editor.KeyBindings.Add<MoveHomeCommand>(ConsoleKey.Home);
-            editor.KeyBindings.Add<MoveEndCommand>(ConsoleKey.End);
-            editor.KeyBindings.Add<MoveLeftCommand>(ConsoleKey.LeftArrow);
-            editor.KeyBindings.Add<MoveRightCommand>(ConsoleKey.RightArrow);
-            editor.KeyBindings.Add<PreviousWordCommand>(ConsoleKey.LeftArrow, ConsoleModifiers.Control);
-            editor.KeyBindings.Add<NextWordCommand>(ConsoleKey.RightArrow, ConsoleModifiers.Control);
-            editor.KeyBindings.Add<SubmitCommand>(ConsoleKey.Enter);
-            editor.KeyBindings.Add<NewLineCommand>(ConsoleKey.Enter, ConsoleModifiers.Shift);
-
             // Create the JavaScript engine
             var engine = new JavaScriptEngine(cfg => cfg.AllowClr());
             engine.SetValue("print", new Action<object>(res => AnsiConsole.MarkupLine("[yellow]" + res.ToString().EscapeMarkup() + "[/]")));
@@ -59,6 +46,11 @@ namespace RadLine.Examples
                 if (source.Equals("exit", StringComparison.OrdinalIgnoreCase))
                 {
                     break;
+                }
+                else if (source.Equals("clear", StringComparison.OrdinalIgnoreCase))
+                {
+                    AnsiConsole.Console.Clear(true);
+                    continue;
                 }
 
                 Evaluate(engine, source);

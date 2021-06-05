@@ -9,5 +9,7 @@ namespace RadLine
         MoveUp,
         MoveFirst,
         MoveLast,
+        PreviousHistory,
+        NextHistory,
     }
 }

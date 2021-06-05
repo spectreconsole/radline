@@ -22,6 +22,7 @@ namespace RadLine
                 throw new NotSupportedException("Only interactive terminals are supported as input source");
             }
 
+            // TODO: Put terminal in raw mode
             while (true)
             {
                 if (cancellationToken.IsCancellationRequested)
