@@ -17,7 +17,7 @@ namespace RadLine.Tests
                 new TestConsole(),
                 new TestInputSource()
                     .Push("Patrik")
-                    .Push(ConsoleKey.Enter));
+                    .PushEnter());
 
             // When
             var result = await editor.ReadLine(CancellationToken.None);
@@ -34,9 +34,9 @@ namespace RadLine.Tests
                 new TestConsole(),
                 new TestInputSource()
                     .Push("Patrik")
-                    .Push(ConsoleKey.Enter, ConsoleModifiers.Shift)
+                    .PushNewLine()
                     .Push("Svensson")
-                    .Push(ConsoleKey.Enter))
+                    .PushEnter())
             {
                 MultiLine = true,
             };
@@ -58,7 +58,7 @@ namespace RadLine.Tests
                     .Push(ConsoleKey.UpArrow, ConsoleModifiers.Control)
                     .Push(ConsoleKey.UpArrow, ConsoleModifiers.Control)
                     .Push(ConsoleKey.UpArrow, ConsoleModifiers.Control)
-                    .Push(ConsoleKey.Enter));
+                    .PushEnter());
 
             editor.History.Add("Foo");
             editor.History.Add("Bar");
@@ -83,7 +83,7 @@ namespace RadLine.Tests
                     .Push(ConsoleKey.UpArrow, ConsoleModifiers.Control)
                     .Push(ConsoleKey.DownArrow, ConsoleModifiers.Control)
                     .Push(ConsoleKey.DownArrow, ConsoleModifiers.Control)
-                    .Push(ConsoleKey.Enter));
+                    .PushEnter());
 
             editor.History.Add("Foo");
             editor.History.Add("Bar");
@@ -102,15 +102,32 @@ namespace RadLine.Tests
             // Given
             var input = new TestInputSource();
             var editor = new LineEditor(new TestConsole(), input);
-            input.Push("Patrik").Push(ConsoleKey.Enter);
+            input.Push("Patrik").PushEnter();
             await editor.ReadLine(CancellationToken.None);
 
             // When
-            input.Push(ConsoleKey.UpArrow, ConsoleModifiers.Control).Push(ConsoleKey.Enter);
+            input.Push(ConsoleKey.UpArrow, ConsoleModifiers.Control).PushEnter();
             var result = await editor.ReadLine(CancellationToken.None);
 
             // Then
             result.ShouldBe("Patrik");
+        }
+
+        [Fact]
+        public async Task Should_Not_Add_Entered_Text_To_History_If_Its_The_Same_As_The_Last_Entry()
+        {
+            // Given
+            var input = new TestInputSource();
+            var editor = new LineEditor(new TestConsole(), input);
+            input.Push("Patrik").PushNewLine().Push("Svensson").PushEnter();
+            await editor.ReadLine(CancellationToken.None);
+
+            // When
+            input.Push("Patrik").PushNewLine().Push("Svensson").PushEnter();
+            var result = await editor.ReadLine(CancellationToken.None);
+
+            // Then
+            editor.History.Count.ShouldBe(1);
         }
     }
 }

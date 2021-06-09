@@ -11,6 +11,7 @@ namespace RadLine
         private LineBuffer[]? _intermediate;
         private bool _showIntermediate;
 
+        public int Count => _history.Count;
         public LineBuffer[]? Current =>
             _showIntermediate && _intermediate != null
                 ? _intermediate : _current?.Value;
@@ -50,7 +51,34 @@ namespace RadLine
                 throw new ArgumentNullException(nameof(buffers));
             }
 
-            _history.AddLast(buffers as LineBuffer[] ?? buffers.ToArray());
+            var shouldAdd = _history.Last == null;
+            if (_history.Last != null)
+            {
+                if (_history.Last.Value.Length != buffers.Count)
+                {
+                    // Not the same length so not the same content.
+                    shouldAdd = true;
+                }
+                else
+                {
+                    // Compare the buffers line by line
+                    for (var index = 0; index < buffers.Count; index++)
+                    {
+                        // Not the same content?
+                        if (!buffers[index].Content.Equals(_history.Last.Value[index].Content, StringComparison.Ordinal))
+                        {
+                            shouldAdd = true;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if (shouldAdd)
+            {
+                _history.AddLast(buffers as LineBuffer[] ?? buffers.ToArray());
+            }
+
             _current = null;
         }
 

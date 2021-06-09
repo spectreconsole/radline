@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -39,6 +39,18 @@ namespace RadLine.Tests
         public TestInputSource Push(ConsoleKey input)
         {
             _input.Enqueue(new ConsoleKeyInfo((char)input, input, false, false, false));
+            return this;
+        }
+
+        public TestInputSource PushNewLine()
+        {
+            Push(ConsoleKey.Enter, ConsoleModifiers.Shift);
+            return this;
+        }
+
+        public TestInputSource PushEnter()
+        {
+            Push(ConsoleKey.Enter);
             return this;
         }
 
