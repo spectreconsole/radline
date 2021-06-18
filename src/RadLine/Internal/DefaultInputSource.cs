@@ -1,6 +1,4 @@
 using System;
-using System.Threading;
-using System.Threading.Tasks;
 using Spectre.Console;
 
 namespace RadLine
@@ -9,12 +7,19 @@ namespace RadLine
     {
         private readonly IAnsiConsole _console;
 
+        public bool ByPassProcessing => false;
+
         public DefaultInputSource(IAnsiConsole console)
         {
             _console = console ?? throw new ArgumentNullException(nameof(console));
         }
 
-        public async Task<ConsoleKeyInfo?> ReadKey(CancellationToken cancellationToken)
+        public bool IsKeyAvailable()
+        {
+            return Console.KeyAvailable;
+        }
+
+        public ConsoleKeyInfo ReadKey()
         {
             if (!_console.Profile.Out.IsTerminal
                 || !_console.Profile.Capabilities.Interactive)
@@ -23,21 +28,6 @@ namespace RadLine
             }
 
             // TODO: Put terminal in raw mode
-            while (true)
-            {
-                if (cancellationToken.IsCancellationRequested)
-                {
-                    return null;
-                }
-
-                if (Console.KeyAvailable)
-                {
-                    break;
-                }
-
-                await Task.Delay(5, cancellationToken).ConfigureAwait(false);
-            }
-
             return Console.ReadKey(true);
         }
     }

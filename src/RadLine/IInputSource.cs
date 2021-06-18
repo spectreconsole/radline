@@ -1,11 +1,12 @@
 using System;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace RadLine
 {
     public interface IInputSource
     {
-        Task<ConsoleKeyInfo?> ReadKey(CancellationToken cancellationToken);
+        bool ByPassProcessing { get; }
+
+        bool IsKeyAvailable();
+        ConsoleKeyInfo ReadKey();
     }
 }

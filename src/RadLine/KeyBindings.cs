@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
 namespace RadLine
@@ -7,22 +8,32 @@ namespace RadLine
     public sealed class KeyBindings
     {
         private readonly Dictionary<KeyBinding, Func<LineEditorCommand>> _bindings;
+        private readonly Dictionary<Type, KeyBinding> _bindingLookup;
 
         public int Count => _bindings.Count;
 
         public KeyBindings()
         {
             _bindings = new Dictionary<KeyBinding, Func<LineEditorCommand>>(new KeyBindingComparer());
+            _bindingLookup = new Dictionary<Type, KeyBinding>();
         }
 
-        internal void Add(KeyBinding binding, Func<LineEditorCommand> command)
+        internal void Add<TCommand>(KeyBinding binding, Func<TCommand> command)
+            where TCommand : LineEditorCommand
         {
             if (binding is null)
             {
                 throw new ArgumentNullException(nameof(binding));
             }
 
-            _bindings[binding] = command;
+            _bindings[binding] = () => command();
+            _bindingLookup[typeof(TCommand)] = binding;
+        }
+
+        internal bool TryFindKeyBindings<TCommand>([NotNullWhen(true)] out KeyBinding? binding)
+            where TCommand : LineEditorCommand
+        {
+            return _bindingLookup.TryGetValue(typeof(TCommand), out binding);
         }
 
         internal void Remove(KeyBinding binding)

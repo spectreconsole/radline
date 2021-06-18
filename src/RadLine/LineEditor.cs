@@ -15,6 +15,7 @@ namespace RadLine
         private readonly IAnsiConsole _console;
         private readonly LineEditorRenderer _renderer;
         private readonly LineEditorHistory _history;
+        private readonly InputBuffer _input;
 
         public KeyBindings KeyBindings { get; }
         public bool MultiLine { get; init; } = false;
@@ -32,6 +33,7 @@ namespace RadLine
             _provider = provider;
             _renderer = new LineEditorRenderer(_console, this);
             _history = new LineEditorHistory();
+            _input = new InputBuffer(_source);
 
             KeyBindings = new KeyBindings();
             KeyBindings.AddDefault();
@@ -56,6 +58,7 @@ namespace RadLine
             var state = new LineEditorState(Prompt, Text);
 
             _history.Reset();
+            _input.Initialize(KeyBindings);
             _renderer.Refresh(state);
 
             while (true)
@@ -155,7 +158,7 @@ namespace RadLine
 
                 // Get command
                 var command = default(LineEditorCommand);
-                var key = await _source.ReadKey(cancellationToken).ConfigureAwait(false);
+                var key = await _input.ReadKey(MultiLine, cancellationToken).ConfigureAwait(false);
                 if (key != null)
                 {
                     if (key.Value.KeyChar != 0 && !char.IsControl(key.Value.KeyChar))

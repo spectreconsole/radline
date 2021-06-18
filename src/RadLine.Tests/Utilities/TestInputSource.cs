@@ -1,13 +1,13 @@
 using System;
 using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace RadLine.Tests
 {
     public sealed class TestInputSource : IInputSource
     {
         private readonly Queue<ConsoleKeyInfo> _input;
+
+        public bool ByPassProcessing => true;
 
         public TestInputSource()
         {
@@ -64,25 +64,19 @@ namespace RadLine.Tests
             return this;
         }
 
-        public ConsoleKeyInfo? ReadKey(bool intercept)
+        public bool IsKeyAvailable()
         {
-            if (_input.Count == 0)
-            {
-                throw new InvalidOperationException("No input available.");
-            }
-
-            return _input.Dequeue();
+            return _input.Count > 0;
         }
 
-        Task<ConsoleKeyInfo?> IInputSource.ReadKey(CancellationToken cancellationToken)
+        ConsoleKeyInfo IInputSource.ReadKey()
         {
             if (_input.Count == 0)
             {
                 throw new InvalidOperationException("No keys available");
             }
 
-            var key = _input.Dequeue();
-            return Task.FromResult<ConsoleKeyInfo?>(key);
+            return _input.Dequeue();
         }
     }
 }
