@@ -7,10 +7,10 @@ var configuration = Argument("configuration", "Release");
 Task("Build")
     .Does(context => 
 {
-    DotNetCoreBuild("./src/RadLine.sln", new DotNetCoreBuildSettings {
+    DotNetBuild("./src/RadLine.sln", new DotNetBuildSettings {
         Configuration = configuration,
         NoIncremental = context.HasArgument("rebuild"),
-        MSBuildSettings = new DotNetCoreMSBuildSettings()
+        MSBuildSettings = new DotNetMSBuildSettings()
             .TreatAllWarningsAs(MSBuildTreatAllWarningsAs.Error)
     });
 });
@@ -19,7 +19,7 @@ Task("Test")
     .IsDependentOn("Build")
     .Does(context => 
 {
-    DotNetCoreTest("./src/RadLine.Tests/RadLine.Tests.csproj", new DotNetCoreTestSettings {
+    DotNetTest("./src/RadLine.Tests/RadLine.Tests.csproj", new DotNetTestSettings {
         Configuration = configuration,
         NoRestore = true,
         NoBuild = true,
@@ -32,12 +32,12 @@ Task("Package")
 {
     context.CleanDirectory("./.artifacts");
 
-    context.DotNetCorePack($"./src/RadLine.sln", new DotNetCorePackSettings {
+    context.DotNetPack($"./src/RadLine.sln", new DotNetPackSettings {
         Configuration = configuration,
         NoRestore = true,
         NoBuild = true,
         OutputDirectory = "./.artifacts",
-        MSBuildSettings = new DotNetCoreMSBuildSettings()
+        MSBuildSettings = new DotNetMSBuildSettings()
             .TreatAllWarningsAs(MSBuildTreatAllWarningsAs.Error)
     });
 });
@@ -56,7 +56,7 @@ Task("Publish-NuGet")
     foreach(var file in context.GetFiles("./.artifacts/*.nupkg")) 
     {
         context.Information("Publishing {0}...", file.GetFilename().FullPath);
-        DotNetCoreNuGetPush(file.FullPath, new DotNetCoreNuGetPushSettings
+        DotNetNuGetPush(file.FullPath, new DotNetNuGetPushSettings
         {
             Source = "https://api.nuget.org/v3/index.json",
             ApiKey = apiKey,

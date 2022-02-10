@@ -50,7 +50,7 @@ namespace RadLine.Examples
 
             // Write the buffer
             AnsiConsole.WriteLine();
-            AnsiConsole.Render(new Panel(result.EscapeMarkup())
+            AnsiConsole.Write(new Panel(result.EscapeMarkup())
                 .Header("[yellow]Text:[/]")
                 .RoundedBorder());
         }

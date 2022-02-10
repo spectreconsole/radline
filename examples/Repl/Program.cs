@@ -21,7 +21,7 @@ namespace RadLine.Examples
                 AnsiConsole.MarkupLine("The terminal does not support ANSI codes, or it isn't a terminal.");
             }
 
-            AnsiConsole.Render(new FigletText("JS REPL"));
+            AnsiConsole.Write(new FigletText("JS REPL"));
             AnsiConsole.MarkupLine("Type [yellow]exit[/] to leave, " +
                 "[yellow]print([grey]obj[/])[/] to write to the console, " +
                 "[yellow]load([grey]'path'[/])[/] to load scripts.");
@@ -84,7 +84,7 @@ namespace RadLine.Examples
 
         private static void Print(string message, Color color)
         {
-            AnsiConsole.Render(
+            AnsiConsole.Write(
                 new Padder(
                     new Panel(message).BorderColor(color),
                     new Padding(2, 0)));
