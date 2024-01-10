@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
     <IsPackable>true</IsPackable>
     <NoWarn>$(NoWarn);NU5104</NoWarn>
@@ -13,11 +13,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Spectre.Console" Version="0.43" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Update="Roslynator.Analyzers" Version="4.0.2" />
+    <PackageReference Include="Spectre.Console" Version="0.48.0" />
   </ItemGroup>
 
 </Project>
