@@ -1,4 +1,6 @@
+using Esprima;
 using Spectre.Console;
+using Spectre.Console.Rendering;
 
 namespace RadLine.Examples
 {
@@ -41,10 +43,9 @@ namespace RadLine.Examples
 
             return highlighter;
         }
-
-        public Style Highlight(string token)
+        public IRenderable BuildHighlightedText(string text)
         {
-            return _highlighter.Highlight(token);
+            return _highlighter.BuildHighlightedText(text);
         }
     }
 }

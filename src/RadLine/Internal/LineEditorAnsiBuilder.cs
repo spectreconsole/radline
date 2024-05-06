@@ -239,14 +239,7 @@ namespace RadLine
                 return new Text(text);
             }
 
-            var paragraph = new Paragraph();
-            foreach (var token in StringTokenizer.Tokenize(text))
-            {
-                var style = string.IsNullOrWhiteSpace(token) ? null : highlighter.Highlight(token);
-                paragraph.Append(token, style);
-            }
-
-            return paragraph;
+            return highlighter.BuildHighlightedText(text);
         }
     }
 }
