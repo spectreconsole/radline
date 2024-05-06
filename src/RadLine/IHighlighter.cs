@@ -1,9 +1,9 @@
-using Spectre.Console;
+using Spectre.Console.Rendering;
 
 namespace RadLine
 {
     public interface IHighlighter
     {
-        Style? Highlight(string token);
+        IRenderable BuildHighlightedText(string text);
     }
 }

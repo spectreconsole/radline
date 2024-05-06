@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using Spectre.Console;
+using Spectre.Console.Rendering;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace RadLine
 {
@@ -19,10 +21,22 @@ namespace RadLine
             return this;
         }
 
-        Style? IHighlighter.Highlight(string token)
+        IRenderable IHighlighter.BuildHighlightedText(string text)
         {
-            _words.TryGetValue(token, out var style);
-            return style;
+            var paragraph = new Paragraph();
+            foreach (var token in StringTokenizer.Tokenize(text))
+            {
+                if (_words.TryGetValue(token, out var style))
+                {
+                    paragraph.Append(token, style);
+                }
+                else
+                {
+                    paragraph.Append(token, null);
+                }
+            }
+
+            return paragraph;
         }
     }
 }
