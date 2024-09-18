@@ -6,11 +6,13 @@ namespace RadLine
 {
     public sealed class LineBuffer
     {
+        private string _initialContent;
         private string _buffer;
         private int _position;
 
         public int Position => _position;
         public int Length => _buffer.Length;
+        public string InitialContent => _initialContent;
         public string Content => _buffer;
 
         public bool AtBeginning => Position == 0;
@@ -77,7 +79,8 @@ namespace RadLine
 
         public LineBuffer(string? content = null)
         {
-            _buffer = content ?? string.Empty;
+            _initialContent = content ?? string.Empty;
+            _buffer = _initialContent;
             _position = _buffer.Length;
         }
 
@@ -88,6 +91,7 @@ namespace RadLine
                 throw new ArgumentNullException(nameof(buffer));
             }
 
+            _initialContent = buffer.InitialContent;
             _buffer = buffer.Content;
             _position = _buffer.Length;
         }
@@ -113,6 +117,12 @@ namespace RadLine
         public void Insert(string text)
         {
             _buffer = _buffer.Insert(_position, text);
+        }
+
+        public void Reset()
+        {
+            _buffer = _initialContent;
+            _position = _buffer.Length;
         }
 
         public int Clear(int index, int count)

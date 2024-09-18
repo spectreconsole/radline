@@ -15,9 +15,11 @@ namespace RadLine
         {
             _state = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase);
             _provider = provider;
-
             Buffer = buffer ?? throw new ArgumentNullException(nameof(buffer));
+            InitialText = buffer.Content;
         }
+
+        public string? InitialText { get; }
 
         public object? GetService(Type serviceType)
         {

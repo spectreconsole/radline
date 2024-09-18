@@ -139,8 +139,9 @@ namespace RadLine
                 _history.Add(state.GetBuffers());
             }
 
-            // Return all the lines
-            return cancelled ? null : state.Text;
+            // If cancelled return initial text otherwise
+            // return text from current state
+            return cancelled ? Text : state.Text;
         }
 
         private async Task<(LineBuffer Buffer, SubmitAction Result)> ReadLine(

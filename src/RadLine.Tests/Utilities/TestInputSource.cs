@@ -54,6 +54,12 @@ namespace RadLine.Tests
             return this;
         }
 
+        public TestInputSource PushEscape()
+        {
+            Push(ConsoleKey.Escape);
+            return this;
+        }
+
         public TestInputSource Push(ConsoleKey input, ConsoleModifiers modifiers)
         {
             var shift = modifiers.HasFlag(ConsoleModifiers.Shift);

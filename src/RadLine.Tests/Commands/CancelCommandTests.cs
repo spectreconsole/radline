@@ -3,22 +3,23 @@ using Xunit;
 
 namespace RadLine.Tests
 {
-    public sealed class InsertCommandTests
+    public sealed class CancelCommandTests
     {
         [Fact]
-        public void Should_Insert_Text_At_Position()
+        public void Should_Cancel_Input()
         {
             // Given
             var buffer = new LineBuffer("Foo");
             var context = new LineEditorContext(buffer);
-            var command = new InsertCommand('l');
+            buffer.Insert("Bar");
+            var command = new CancelCommand();
 
             // When
             command.Execute(context);
 
             // Then
-            buffer.Content.ShouldBe("Fool");
-            buffer.Position.ShouldBe(4);
+            buffer.Content.ShouldBe("Foo");
+            buffer.Position.ShouldBe(3);
         }
     }
 }
