@@ -6,7 +6,7 @@ namespace RadLine
 {
     public sealed class LineBuffer
     {
-        private string _initialContent;
+        private readonly string _initialContent;
         private string _buffer;
         private int _position;
 
