@@ -88,11 +88,8 @@ namespace RadLine
             if ((_current == null && _intermediate == null) || _showIntermediate)
             {
                 // Got something written that we don't want to lose?
-                if (!string.IsNullOrWhiteSpace(state.Text))
-                {
-                    // Store the interediate buffer so it wont get lost.
-                    _intermediate = state.GetBuffers().ToArray();
-                }
+                // Store the interediate buffer so it wont get lost.
+                _intermediate = state.GetBuffers().ToArray();
             }
 
             _showIntermediate = false;
