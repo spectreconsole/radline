@@ -23,6 +23,7 @@ namespace RadLine
             bindings.Add<NextWordCommand>(ConsoleKey.RightArrow, ConsoleModifiers.Control);
             bindings.Add<PreviousHistoryCommand>(ConsoleKey.UpArrow, ConsoleModifiers.Control);
             bindings.Add<NextHistoryCommand>(ConsoleKey.DownArrow, ConsoleModifiers.Control);
+            bindings.Add<CancelCommand>(ConsoleKey.Escape);
             bindings.Add<SubmitCommand>(ConsoleKey.Enter);
             bindings.Add<NewLineCommand>(ConsoleKey.Enter, ConsoleModifiers.Shift);
         }

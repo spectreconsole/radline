@@ -10,6 +10,26 @@ namespace RadLine.Tests
     public sealed class LineEditorTests
     {
         [Fact]
+        public async Task Should_Return_Original_Text_When_Pressing_Escape()
+        {
+            // Given
+            var editor = new LineEditor(
+                new TestConsole(),
+                new TestInputSource()
+                    .Push("Bar")
+                    .PushEscape())
+            {
+                Text = "Foo",
+            };
+
+            // When
+            var result = await editor.ReadLine(CancellationToken.None);
+
+            // Then
+            result.ShouldBe("Foo");
+        }
+
+        [Fact]
         public async Task Should_Return_Entered_Text_When_Pressing_Enter()
         {
             // Given
