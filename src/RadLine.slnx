@@ -1,0 +1,18 @@
+<Solution>
+  <Configurations>
+    <Platform Name="Any CPU" />
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Folder Name="/Build/">
+    <File Path=".editorconfig" />
+    <File Path="Directory.Build.props" />
+    <File Path="Directory.Packages.props" />
+  </Folder>
+  <Folder Name="/Examples/">
+    <Project Path="../examples/Demo/Demo.csproj" />
+    <Project Path="../examples/Repl/Repl.csproj" />
+  </Folder>
+  <Project Path="RadLine.Tests/RadLine.Tests.csproj" />
+  <Project Path="RadLine/RadLine.csproj" />
+</Solution>

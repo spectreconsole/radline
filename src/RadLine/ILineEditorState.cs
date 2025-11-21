@@ -1,4 +1,4 @@
-﻿namespace RadLine
+namespace RadLine
 {
     public interface ILineEditorState
     {

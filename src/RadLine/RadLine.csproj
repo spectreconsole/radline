@@ -1,19 +1,17 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFrameworks>net10.0;net8.0</TargetFrameworks>
     <Nullable>enable</Nullable>
     <IsPackable>true</IsPackable>
-    <NoWarn>$(NoWarn);NU5104</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
-    <AdditionalFiles Include="..\stylecop.json" Link="Properties/stylecop.json" />
-    <None Include="../../resources/gfx/small-logo.png" Pack="true" PackagePath="\" Link="Properties/small-logo.png" />
+    <None Include="../../resources/gfx/small-logo.png" Pack="true" PackagePath="\" Link="Properties/small-logo.png"/>
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Spectre.Console" Version="0.48.0" />
+    <PackageReference Include="Spectre.Console"/>
   </ItemGroup>
 
 </Project>

@@ -1,4 +1,4 @@
-﻿namespace RadLine
+namespace RadLine
 {
     public sealed class MoveFirstLineCommand : LineEditorCommand
     {

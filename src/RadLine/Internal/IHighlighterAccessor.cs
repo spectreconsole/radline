@@ -1,4 +1,4 @@
-﻿namespace RadLine
+namespace RadLine
 {
     internal interface IHighlighterAccessor
     {

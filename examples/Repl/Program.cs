@@ -1,10 +1,8 @@
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using Jint;
-using Jint.Native;
 using Jint.Runtime;
 using Spectre.Console;
 using JavaScriptEngine = Jint.Engine;
@@ -43,6 +41,11 @@ namespace RadLine.Examples
             {
                 AnsiConsole.WriteLine();
                 var source = await editor.ReadLine(CancellationToken.None);
+                if (string.IsNullOrWhiteSpace(source))
+                {
+                    continue;
+                }
+
                 if (source.Equals("exit", StringComparison.OrdinalIgnoreCase))
                 {
                     break;
@@ -67,7 +70,7 @@ namespace RadLine.Examples
                         var result = engine.Evaluate(source);
                         if (!result.IsNull() && !result.IsUndefined())
                         {
-                            var stringResult = TypeConverter.ToString(engine.Json.Stringify(engine.Json, Arguments.From(result, Undefined.Instance, "  ")));
+                            var stringResult = TypeConverter.ToString(result.Call());
                             Print(stringResult, Color.Green);
                         }
                     }
@@ -86,7 +89,7 @@ namespace RadLine.Examples
         {
             AnsiConsole.Write(
                 new Padder(
-                    new Panel(message).BorderColor(color),
+                    new Panel(message.EscapeMarkup()).BorderColor(color),
                     new Padding(2, 0)));
         }
     }
