@@ -4,7 +4,6 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Spectre.Console;
-using Spectre.Console.Advanced;
 
 namespace RadLine
 {

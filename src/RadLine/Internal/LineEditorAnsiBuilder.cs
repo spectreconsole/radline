@@ -2,7 +2,6 @@ using System;
 using System.Linq;
 using System.Text;
 using Spectre.Console;
-using Spectre.Console.Advanced;
 using Spectre.Console.Rendering;
 
 namespace RadLine
